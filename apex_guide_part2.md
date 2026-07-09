@@ -801,11 +801,11 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 3. في حقل **Execute when Page Loads**، الصق الكود المحدث التالي بالكامل:
 
 ```javascript
-// تفعيل السحب والإفلات التفاعلي بربط الأعمدة الأربعة يدوياً عبر الـ IDs
-var sortableSelector = "#col_created .a-CardList-items, #col_created .t-Cards, " +
-                       "#col_in_progress .a-CardList-items, #col_in_progress .t-Cards, " +
-                       "#col_on_hold .a-CardList-items, #col_on_hold .t-Cards, " +
-                       "#col_completed .a-CardList-items, #col_completed .t-Cards";
+// تفعيل السحب والإفلات التفاعلي بربط الأعمدة الأربعة يدوياً عبر الـ IDs (يدعم APEX 24.2)
+var sortableSelector = "#col_created .a-CardView-items, " +
+                       "#col_in_progress .a-CardView-items, " +
+                       "#col_on_hold .a-CardView-items, " +
+                       "#col_completed .a-CardView-items";
 
 $(sortableSelector).sortable({
     connectWith: sortableSelector,
@@ -815,7 +815,6 @@ $(sortableSelector).sortable({
     receive: function(event, ui) {
         // 1. الحصول على ID المهمة المسحوبة من الكارت
         var taskId = ui.item.find(".tts-card-title").attr("data-id") || 
-                     ui.item.find(".a-CardList-title").attr("data-id") || 
                      ui.item.find("[data-task-id]").data("task-id") || 
                      ui.item.attr("data-id");
         
@@ -890,46 +889,80 @@ END;
 
 ## 🎨 تنسيق الـ CSS المخصص لـ Kanban Board (أضفه في Page CSS Inline)
 ```css
-/* تنسيق الأعمدة لتظهر كلوحة مهام احترافية */
-.tts-kanban-board .a-CardList {
-    background-color: #f1f3f4;
-    border-radius: 8px;
-    padding: 12px;
-    margin: 8px;
-    min-height: 550px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+/* تلوين عناوين الأعمدة لتمييز الحالات */
+#col_created .t-CardsRegion-title { color: #1a73e8 !important; font-weight: 700 !important; }
+#col_in_progress .t-CardsRegion-title { color: #fbbc04 !important; font-weight: 700 !important; }
+#col_on_hold .t-CardsRegion-title { color: #ea4335 !important; font-weight: 700 !important; }
+#col_completed .t-CardsRegion-title { color: #34a853 !important; font-weight: 700 !important; }
+
+/* جعل الأعمدة رمادية فاتحة لتبدو كلوحة حقيقية */
+.tts-kanban-col {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    min-height: 600px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 
-.tts-kanban-board .a-CardList-heading {
-    border-bottom: 2px solid var(--tts-primary);
-    margin-bottom: 12px;
-    padding-bottom: 6px;
+/* منع إخفاء القائمة عند خلو العمود من المهام للسماح بالإفلات */
+.tts-kanban-col .a-TMV-w-scroll {
+    display: block !important;
+}
+.tts-kanban-col .a-CardView-items {
+    min-height: 500px !important;
+    display: block !important;
+}
+.tts-kanban-col .a-GV-noDataMsg {
+    display: none !important; /* إخفاء رسالة 'No data found' الافتراضية لمنع تداخلها */
 }
 
-.tts-kanban-board .a-CardList-headingText {
-    font-size: 16px;
-    font-weight: 700;
-    color: #3c4043;
-}
-
-/* تنسيق الكروت أثناء السحب */
-.tts-kanban-board .a-CardList-item {
+/* تنسيق الكروت الفردية داخل الأعمدة */
+.tts-task-card {
+    background: white !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+    margin-bottom: 12px !important;
+    border-left: 4px solid #1a73e8 !important;
+    transition: transform 0.2s, box-shadow 0.2s;
     cursor: grab;
-    transition: transform 0.1s;
 }
 
-.tts-kanban-board .a-CardList-item:active {
+.tts-task-card:active {
     cursor: grabbing;
 }
 
-/* مكان الكارت الفراغي الذي سيتم إلقاء الكارت فيه */
+.tts-task-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12) !important;
+}
+
+.tts-task-card.priority-high { border-left-color: #ea4335 !important; }
+.tts-task-card.priority-critical { border-left-color: #b71c1c !important; }
+.tts-task-card.priority-medium { border-left-color: #fbbc04 !important; }
+.tts-task-card.priority-low { border-left-color: #34a853 !important; }
+
+/* تنسيق المساحة الفارغة عند سحب كارت */
 .ui-state-highlight-placeholder {
-    border: 2px dashed var(--tts-primary);
-    background-color: rgba(26, 115, 232, 0.05);
-    border-radius: 8px;
-    margin-bottom: 12px;
-    height: 100px;
+    border: 2px dashed #1a73e8 !important;
+    background-color: rgba(26, 115, 232, 0.04) !important;
+    border-radius: 6px !important;
+    height: 90px !important;
+    margin-bottom: 12px !important;
     visibility: visible !important;
+}
+
+/* تنسيق حقول الميتا للكارت */
+.card-meta {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+.card-meta .due-date {
+    color: #5f6368;
+    font-weight: 500;
 }
 ```
 
