@@ -872,21 +872,14 @@ initKanbanSortable();
 
 // 2. الاستماع لأي عملية Refresh (AJAX) وإعادة تشغيل السحب بأمان بعد انتهائها بالكامل
 $(document).ajaxComplete(function(event, xhr, settings) {
-    // التأكد من أن الطلب يخص أحد الأعمدة الأربعة
-    if (settings.data && (settings.data.indexOf("col_created") !== -1 || 
-                           settings.data.indexOf("col_in_progress") !== -1 || 
-                           settings.data.indexOf("col_on_hold") !== -1 || 
-                           settings.data.indexOf("col_completed") !== -1)) {
-        
-        if (window.kanbanTimeout) {
-            clearTimeout(window.kanbanTimeout);
-        }
-        
-        // انتظار 250 مللي ثانية حتى ينتهي استبدال عناصر الـ DOM بالكامل ثم ربط السحب من جديد
-        window.kanbanTimeout = setTimeout(function() {
-            initKanbanSortable();
-        }, 250);
+    if (window.kanbanTimeout) {
+        clearTimeout(window.kanbanTimeout);
     }
+    
+    // انتظار 350 مللي ثانية للتأكد من استقرار الـ DOM بالكامل بعد استلام البيانات
+    window.kanbanTimeout = setTimeout(function() {
+        initKanbanSortable();
+    }, 350);
 });
 ```
 
