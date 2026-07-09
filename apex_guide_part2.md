@@ -662,40 +662,275 @@ ORDER BY h.changed_at DESC
 
 ---
 
-# 📄 Page 6: Kanban Board
+# 📄 Page 6: Kanban Board (لوحة المهام التفاعلية)
 
-## الخطوة 6.1: إنشاء الصفحة
+هناك طريقتان شائعتان لبناء لوحة الـ Kanban في Oracle APEX 24.2. سنقوم بشرح الطريقتين بالتفصيل لتختار الأنسب لمشروعك:
 
+---
+
+## 🛠 الطريقة (أ): الأعمدة المتجاورة (Side-by-Side Cards Regions) - *موصى بها لسهولتها واستقرارها*
+
+تعتمد هذه الطريقة على إنشاء 4 مناطق (Regions) من نوع Cards بجانب بعضها البعض، كل منطقة تمثل حالة (Status) للمهمة، مع أزرار سريعة لنقل المهمة للحالة التالية.
+
+### الخطوة 1: إنشاء الصفحة
 1. **Create Page** → **Blank Page**
+2. رقم الصفحة: `6` | الاسم: `Kanban Board` | نوع الصفحة: `Normal`.
 
-| الحقل | القيمة |
-|---|---|
-| Page Number | `6` |
-| Name | `Kanban Board` |
+### الخطوة 2: إنشاء الحاوية الرئيسية (Parent Region)
+1. أضف Region جديد في Content Body:
+   - **Title**: `Kanban Board`
+   - **Type**: `Static Content`
+   - **Template**: `Blank Column` (أو بدون حدود لتوفير المساحة)
 
-2. أضف Region:
+### الخطوة 3: إنشاء أعمدة الحالات (Sub-Regions)
+تحت الـ Parent Region، سننشئ 4 مناطق فرعية (Sub-Regions) من نوع **Cards** ونضعها بجانب بعضها البعض في الشبكة (Grid):
 
-| الحقل | القيمة |
-|---|---|
-| Title | `Kanban Board` |
-| Type | `Cards` |
-
+#### 1. عمود: Created (جديد)
+- **Title**: `Created`
+- **Type**: `Cards`
+- **Layout**: Column `1` | Column Span `3` (ليتسع لـ 4 أعمدة في الشاشة)
+- **SQL Query Source**:
 ```sql
-SELECT task_id, task_number, title, status, status_display,
-       priority, priority_display, assigned_to_name,
-       due_date, days_remaining, is_overdue
+SELECT task_id, task_number, title, assigned_to_name, priority_display, priority, due_date, days_remaining, is_overdue, 'priority-' || LOWER(priority) AS card_css
 FROM v_tasks_full
-WHERE (:F_USER_ROLE = 'ADMIN' OR assigned_to_id = TO_NUMBER(:F_USER_ID)
-       OR created_by_id = TO_NUMBER(:F_USER_ID)
-       OR (:F_USER_ROLE = 'MANAGER' AND manager_id = TO_NUMBER(:F_USER_ID)))
-AND status != 'CANCELLED'
+WHERE status = 'CREATED'
+AND (:F_USER_ROLE = 'ADMIN' OR assigned_to_id = TO_NUMBER(:F_USER_ID) OR created_by_id = TO_NUMBER(:F_USER_ID) OR (:F_USER_ROLE = 'MANAGER' AND manager_id = TO_NUMBER(:F_USER_ID)))
 ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 ```
 
-3. في **Attributes** → ضبط Cards layout كـ Kanban.
+#### 2. عمود: In Progress (قيد التنفيذ)
+- **Title**: `In Progress`
+- **Type**: `Cards`
+- **Layout**: Column `4` (أزل Start New Row) | Column Span `3`
+- **SQL Query Source**:
+```sql
+SELECT task_id, task_number, title, assigned_to_name, priority_display, priority, due_date, days_remaining, is_overdue, 'priority-' || LOWER(priority) AS card_css
+FROM v_tasks_full
+WHERE status = 'IN_PROGRESS'
+AND (:F_USER_ROLE = 'ADMIN' OR assigned_to_id = TO_NUMBER(:F_USER_ID) OR created_by_id = TO_NUMBER(:F_USER_ID) OR (:F_USER_ROLE = 'MANAGER' AND manager_id = TO_NUMBER(:F_USER_ID)))
+ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
+```
 
-> [!TIP]
-> في APEX 24.2 يمكنك تفعيل **Layout → Columns** وضبط `STATUS` كعمود التصنيف.
+#### 3. عمود: On Hold (معلقة)
+- **Title**: `On Hold`
+- **Type**: `Cards`
+- **Layout**: Column `7` (أزل Start New Row) | Column Span `3`
+- **SQL Query Source**:
+```sql
+SELECT task_id, task_number, title, assigned_to_name, priority_display, priority, due_date, days_remaining, is_overdue, 'priority-' || LOWER(priority) AS card_css
+FROM v_tasks_full
+WHERE status = 'ON_HOLD'
+AND (:F_USER_ROLE = 'ADMIN' OR assigned_to_id = TO_NUMBER(:F_USER_ID) OR created_by_id = TO_NUMBER(:F_USER_ID) OR (:F_USER_ROLE = 'MANAGER' AND manager_id = TO_NUMBER(:F_USER_ID)))
+ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
+```
+
+#### 4. عمود: Completed (مكتملة)
+- **Title**: `Completed`
+- **Type**: `Cards`
+- **Layout**: Column `10` (أزل Start New Row) | Column Span `3`
+- **SQL Query Source**:
+```sql
+SELECT task_id, task_number, title, assigned_to_name, priority_display, priority, due_date, days_remaining, is_overdue, 'priority-' || LOWER(priority) AS card_css
+FROM v_tasks_full
+WHERE status = 'COMPLETED'
+AND (:F_USER_ROLE = 'ADMIN' OR assigned_to_id = TO_NUMBER(:F_USER_ID) OR created_by_id = TO_NUMBER(:F_USER_ID) OR (:F_USER_ROLE = 'MANAGER' AND manager_id = TO_NUMBER(:F_USER_ID)))
+ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
+```
+
+### الخطوة 4: ضبط خصائص الكروت (Attributes) لكل عمود
+كرر الإعدادات التالية في الـ **Attributes** لكل منطقة Cards من الأربعة:
+- **Primary Key Column**: `TASK_ID`
+- **Title** → Column: `TITLE`
+- **Subtitle** → Column: `TASK_NUMBER`
+- **Body** → Column: `ASSIGNED_TO_NAME`
+- **Secondary Body** → HTML Expression: 
+  ```html
+  <div class="card-meta">
+      <span class="status-badge #CARD_CSS#">#PRIORITY_DISPLAY#</span>
+      <span class="due-date &LOG_CSS.">Due: #DUE_DATE# (#DAYS_REMAINING#d remaining)</span>
+  </div>
+  ```
+- **Card CSS Classes**: `tts-task-card #CARD_CSS#`
+- **Card Link**: 
+  - Target: `Page 5` (Task Details)
+  - Set Items: Name: `P5_TASK_ID` | Value: `&TASK_ID.`
+
+### الخطوة 5: إضافة أزرار الحركة السريعة (Actions)
+في كل منطقة Cards، يمكنك إدراج زر حركة لتسهيل التحديث:
+1. في الـ Cards Region → اضغط بالزر الأيمن على **Actions** → **Create Action**.
+2. خصائص الـ Action:
+   - **Type**: `Full Card` (أو `Button`)
+   - **Label**: `Start` (لعمود Created) / `Complete` (لعمود In Progress) / `Resume` (لعمود On Hold)
+   - **Action**: `Redirect to Page` أو `Defined by Dynamic Action` (لتحديث الحالة عبر Ajax مباشرة بدون إعادة تحميل الصفحة).
+
+---
+
+## 🖱 الطريقة (ب): السحب والإفلات التفاعلي (Interactive Drag & Drop Kanban)
+
+تستخدم هذه الطريقة منطقة Cards واحدة مع تفعيل خاصية الـ Group By في APEX 24.2، وتطوير عملية سحب وإفلات باستخدام مكتبة jQuery UI المدمجة في APEX.
+
+### الخطوة 1: إنشاء الصفحة ومنطقة الكروت
+1. أنشئ صفحة جديدة فارغة رقم `6`.
+2. أضف منطقة Cards جديدة:
+   - **Title**: `Interactive Kanban Board`
+   - **Static ID**: `tts_kanban` (مهم جداً للتحكم عبر الـ CSS والـ JavaScript)
+   - **CSS Classes**: `tts-kanban-board`
+   - **SQL Query Source**:
+```sql
+SELECT task_id, task_number, title, status, status_display,
+       priority, priority_display, assigned_to_name, due_date,
+       'priority-' || LOWER(priority) AS card_css
+FROM v_tasks_full
+WHERE status != 'CANCELLED'
+AND (:F_USER_ROLE = 'ADMIN' OR assigned_to_id = TO_NUMBER(:F_USER_ID) OR created_by_id = TO_NUMBER(:F_USER_ID) OR (:F_USER_ROLE = 'MANAGER' AND manager_id = TO_NUMBER(:F_USER_ID)))
+ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
+```
+
+### الخطوة 2: تفعيل تقسيم الأعمدة (Group By)
+1. اذهب لخصائص المنطقة → **Attributes**
+2. في قسم **Layout**:
+   - **Group By Column**: `STATUS_DISPLAY` (سيقوم APEX بتقسيم الشاشة لعدة أعمدة رأسية تلقائياً بناءً على الحالات).
+3. اضبط الخصائص الأساسية للكارت:
+   - **Primary Key Column**: `TASK_ID`
+   - **Title**: `TITLE`
+   - **Subtitle**: `TASK_NUMBER`
+   - **Body**: `ASSIGNED_TO_NAME`
+
+### الخطوة 3: برمجة عملية السحب والإفلات (Drag & Drop)
+تأتي مكتبة jQuery UI Sortable مدمجة تلقائياً في APEX. سنقوم بتفعيلها لربط الأعمدة ببعضها:
+
+1. في خصائص الصفحة (Page Properties) → اذهب إلى قسم **JavaScript** → **Execute when Page Loads**:
+2. الصق الكود التالي لتمكين سحب الكروت ونقلها بين الأعمدة واستدعاء الـ Ajax Callback لتحديث قاعدة البيانات:
+
+```javascript
+// تفعيل السحب والإفلات على كروت APEX
+$(".tts-kanban-board .a-CardList-items").sortable({
+    connectWith: ".tts-kanban-board .a-CardList-items",
+    placeholder: "ui-state-highlight-placeholder",
+    cursor: "move",
+    opacity: 0.8,
+    receive: function(event, ui) {
+        // 1. الحصول على رقم المهمة المسحوبة من الكارت
+        var taskId = ui.item.find(".a-CardList-title").attr("data-id") || ui.item.attr("data-id");
+        if (!taskId) {
+            // كود بديل إذا لم يكن الـ ID معرفاً في الـ Attribute مباشرة
+            taskId = ui.item.find("[data-task-id]").data("task-id");
+        }
+
+        // 2. تحديد العمود الجديد (الحالة الجديدة) التي تم إسقاط المهمة فيها
+        var newStatusName = ui.item.closest(".a-CardList").find(".a-CardList-headingText").text().trim();
+        
+        // تحويل الاسم المعروض للحالة المقابلة لها في قاعدة البيانات
+        var newStatus = 'CREATED';
+        if (newStatusName.includes('In Progress') || newStatusName.includes('قيد التنفيذ')) newStatus = 'IN_PROGRESS';
+        else if (newStatusName.includes('On Hold') || newStatusName.includes('معلقة')) newStatus = 'ON_HOLD';
+        else if (newStatusName.includes('Completed') || newStatusName.includes('مكتملة')) newStatus = 'COMPLETED';
+
+        // 3. استدعاء Ajax Callback لتحديث قاعدة البيانات
+        apex.server.process("KANBAN_STATUS_CHANGE", {
+            x01: taskId,
+            x02: newStatus
+        }, {
+            success: function(data) {
+                apex.message.showPageSuccess("Task status updated successfully.");
+                // تحديث اللوحة بالكامل للتأكد من تناسق البيانات
+                apex.region("tts_kanban").refresh();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                apex.message.showErrors([{
+                    type: "error",
+                    location: "page",
+                    message: "Failed to update task status: " + jqXHR.responseText
+                }]);
+                // إعادة الكارت لمكانه الأصلي في حالة الفشل
+                apex.region("tts_kanban").refresh();
+            }
+        });
+    }
+}).disableSelection();
+```
+
+3. لتمرير الـ ID في الكارت بشكل صحيح, اذهب إلى منطقة الـ Cards Attributes:
+   - **Card HTML Expression** (أو **Title HTML Expression**):
+   ```html
+   <span class="a-CardList-title" data-id="&TASK_ID." data-task-id="&TASK_ID.">&TITLE.</span>
+   ```
+
+### الخطوة 4: إنشاء عملية التحديث في الخلفية (Ajax Callback Process)
+1. في Page Designer → اذهب إلى الـ **Processing** tab (أيقونة الترس الدائري في اليسار).
+2. اضغط بالزر الأيمن على **Ajax Callback** → **Create Ajax Callback Process**.
+3. خصائص الـ Process:
+   - **Name**: `KANBAN_STATUS_CHANGE`
+   - **Type**: `PL/SQL Code`
+   - **PL/SQL Code**:
+```sql
+BEGIN
+    -- x01: TASK_ID, x02: NEW_STATUS
+    tts_pkg_tasks.update_task_status(
+        p_task_id    => TO_NUMBER(APEX_APPLICATION.G_X01),
+        p_new_status => APEX_APPLICATION.G_X02,
+        p_user_id    => TO_NUMBER(:F_USER_ID)
+    );
+    
+    -- إرجاع استجابة نجاح بصيغة JSON
+    APEX_JSON.OPEN_OBJECT;
+    APEX_JSON.WRITE('status', 'success');
+    APEX_JSON.CLOSE_OBJECT;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- إرجاع رسالة الخطأ لتظهر للمستخدم في المتصفح
+        HTP.P(SQLERRM);
+END;
+```
+
+---
+
+## 🎨 تنسيق الـ CSS المخصص لـ Kanban Board (أضفه في Page CSS Inline)
+```css
+/* تنسيق الأعمدة لتظهر كلوحة مهام احترافية */
+.tts-kanban-board .a-CardList {
+    background-color: #f1f3f4;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px;
+    min-height: 550px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.tts-kanban-board .a-CardList-heading {
+    border-bottom: 2px solid var(--tts-primary);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+}
+
+.tts-kanban-board .a-CardList-headingText {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3c4043;
+}
+
+/* تنسيق الكروت أثناء السحب */
+.tts-kanban-board .a-CardList-item {
+    cursor: grab;
+    transition: transform 0.1s;
+}
+
+.tts-kanban-board .a-CardList-item:active {
+    cursor: grabbing;
+}
+
+/* مكان الكارت الفراغي الذي سيتم إلقاء الكارت فيه */
+.ui-state-highlight-placeholder {
+    border: 2px dashed var(--tts-primary);
+    background-color: rgba(26, 115, 232, 0.05);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    height: 100px;
+    visibility: visible !important;
+}
+```
+
+---
 
 ---
 
