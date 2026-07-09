@@ -789,30 +789,39 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 
 ---
 
-### الخطوة 6.5: تفعيل مكتبة السحب والإفلات (Require jQuery UI & JS)
+### الخطوة 6.5: تفعيل السحب والإفلات (JavaScript)
 
-> [!IMPORTANT]
-> بما أننا نعمل على صفحة فارغة (Blank Page)، فإن APEX لا يقوم بتحميل مكتبة السحب والإفلات بشكل تلقائي. لتفعيلها:
-> 1. افتح **خصائص الصفحة 6** (اضغط على اسم الصفحة "Page 6: Kanban Board" في أعلى شجرة المكونات اليسرى).
-> 2. في اللوحة اليمنى، انزل لأسفل حتى تصل إلى قسم **Advanced** (خيارات متقدمة).
-> 3. ستجد خياراً اسمه **Require jQuery UI**، قم بتفعيله واجعله **`ON`**. (هذه أهم خطوة وبدونها لن يعمل السحب نهائياً!).
+> [!NOTE]
+> من خلال اختبار التشخيص السابق، تبيّن أن مكتبة **jQuery UI محملة بالفعل وتعمل في صفحتك** (بفضل القالب الافتراضي لـ APEX)، لذلك لا داعي للبحث عن خيار *Require jQuery UI* في خصائص الصفحة.
 
-4. في نفس خصائص الصفحة، ابحث عن قسم **JavaScript**.
-5. في حقل **Execute when Page Loads**، الصق الكود التالي (يدعم جميع قوالب الكروت):
+سنستخدم الآن كود JavaScript ذكي يستهدف المعرفات الثابتة (Static IDs) للأعمدة الأربعة مباشرة لضمان أعلى مستويات الدقة والعمل الفوري:
+
+1. افتح **خصائص الصفحة 6** (اضغط على اسم الصفحة "Page 6: Kanban Board" في أعلى شجرة المكونات اليسرى).
+2. في اللوحة اليمنى، ابحث عن قسم **JavaScript**.
+3. في حقل **Execute when Page Loads**، الصق الكود المحدث التالي بالكامل:
 
 ```javascript
-// تفعيل السحب والإفلات التفاعلي بين الأعمدة الأربعة
-$(".tts-kanban-col .a-CardList-items, .tts-kanban-col .t-Cards").sortable({
-    connectWith: ".tts-kanban-col .a-CardList-items, .tts-kanban-col .t-Cards",
+// تفعيل السحب والإفلات التفاعلي بربط الأعمدة الأربعة يدوياً عبر الـ IDs
+var sortableSelector = "#col_created .a-CardList-items, #col_created .t-Cards, " +
+                       "#col_in_progress .a-CardList-items, #col_in_progress .t-Cards, " +
+                       "#col_on_hold .a-CardList-items, #col_on_hold .t-Cards, " +
+                       "#col_completed .a-CardList-items, #col_completed .t-Cards";
+
+$(sortableSelector).sortable({
+    connectWith: sortableSelector,
     placeholder: "ui-state-highlight-placeholder",
     cursor: "move",
     opacity: 0.85,
     receive: function(event, ui) {
         // 1. الحصول على ID المهمة المسحوبة من الكارت
-        var taskId = ui.item.find(".tts-card-title").attr("data-id") || ui.item.find(".a-CardList-title").attr("data-id") || ui.item.find("[data-task-id]").data("task-id") || ui.item.attr("data-id");
+        var taskId = ui.item.find(".tts-card-title").attr("data-id") || 
+                     ui.item.find(".a-CardList-title").attr("data-id") || 
+                     ui.item.find("[data-task-id]").data("task-id") || 
+                     ui.item.attr("data-id");
         
         // 2. تحديد العمود الجديد الذي سقطت فيه المهمة لمعرفة الحالة الجديدة
-        var targetColId = ui.item.closest(".tts-kanban-col").attr("id");
+        var targetColId = ui.item.closest(".tts-kanban-col").attr("id") || 
+                          ui.item.closest("[id^=col_]").attr("id");
         
         var newStatus = 'CREATED';
         if (targetColId === 'col_in_progress') newStatus = 'IN_PROGRESS';
