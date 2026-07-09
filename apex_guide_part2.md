@@ -789,16 +789,14 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 
 ---
 
-### الخطوة 6.5: تفعيل السحب والإفلات (JavaScript)
+### الخطوة 6.5: تفعيل السحب والإفلات التفاعلي (Native Dynamic Action)
 
-> [!NOTE]
-> من خلال اختبار التشخيص السابق، تبيّن أن مكتبة **jQuery UI محملة بالفعل وتعمل في صفحتك** (بفضل القالب الافتراضي لـ APEX)، لذلك لا داعي للبحث عن خيار *Require jQuery UI* في خصائص الصفحة.
+لضمان عمل السحب والإفلات بشكل مستمر ودائم دون أن يتعطل بعد تحديث الأعمدة (Refresh)، سنقوم باستخدام **Native APEX Dynamic Action** وهو الحل القياسي والأكثر استقراراً في بيئة APEX:
 
-سنستخدم الآن كود JavaScript ذكي يستهدف المعرفات الثابتة (Static IDs) للأعمدة الأربعة مباشرة لضمان أعلى مستويات الدقة والعمل الفوري:
-
-1. افتح **خصائص الصفحة 6** (اضغط على اسم الصفحة "Page 6: Kanban Board" في أعلى شجرة المكونات اليسرى).
-2. في اللوحة اليمنى، ابحث عن قسم **JavaScript**.
-3. في حقل **Execute when Page Loads**، الصق الكود المحدث التالي بالكامل:
+#### 1. تعريف دالة السحب والإفلات (Global Function):
+* افتح **خصائص الصفحة 6** (اضغط على اسم الصفحة "Page 6: Kanban Board" في أعلى شجرة المكونات اليسرى).
+* في اللوحة اليمنى، اذهب إلى قسم **JavaScript**.
+* في حقل **Function and Global Variable Declaration** (الإعلان عن الدوال المتغيرة العامة)، الصق الكود التالي بالكامل:
 
 ```javascript
 function initKanbanSortable() {
@@ -862,23 +860,31 @@ function initKanbanSortable() {
         }
     }).disableSelection();
 }
-
-// 1. تشغيل السحب عند تحميل الصفحة لأول مرة
-initKanbanSortable();
-
-// 2. إعادة تفعيل السحب تلقائياً وبأمان بعد انتهاء تحديث الأعمدة (تجنب تداخل الـ Refresh المتزامن)
-$(document).on("apexafterrefresh", function(e) {
-    if ($(e.target).hasClass("tts-kanban-col") || e.target.id.indexOf("col_") === 0) {
-        if (window.kanbanTimeout) {
-            clearTimeout(window.kanbanTimeout);
-        }
-        // انتظار 200 مللي ثانية حتى تستقر كل الأعمدة المنعشة بالكامل ثم تفعيل السحب
-        window.kanbanTimeout = setTimeout(function() {
-            initKanbanSortable();
-        }, 200);
-    }
-});
 ```
+
+* تأكد من إبقاء حقل **Execute when Page Loads** **فارغاً تماماً** (احذف أي كود منه).
+
+#### 2. إنشاء الـ Dynamic Action للتشغيل التلقائي:
+* في العمود الأيسر لـ Page Designer، اضغط على أيقونة **Dynamic Actions** (أيقونة البرق الصغير).
+* اضغط بالزر الأيمن على **Events** واختر **Create Dynamic Action**.
+* في لوحة الخصائص اليمنى، اضبط الإعدادات التالية:
+
+| الحقل | القيمة |
+|---|---|
+| Name | `Re-init Kanban Sortable` |
+| Event | `After Refresh` |
+| Selection Type | `Region` |
+| Region | (حدد الأعمدة الأربعة: `Created`, `In Progress`, `On Hold`, `Completed`) |
+
+* اضغط على الـ Action الفرعي (تحت كلمة **True** في القائمة اليسرى)، واضبط الخصائص التالية:
+
+| الحقل | القيمة |
+|---|---|
+| Action | `Execute JavaScript Code` |
+| JavaScript Code | `initKanbanSortable();` |
+| Fire on Initialization | **`ON`** (تأكد من تفعيل هذا الخيار ليتم التشغيل عند فتح الصفحة أول مرة تلقائياً) |
+
+* اضغط **Save** وشغل الصفحة.
 
 
 ### الخطوة 4: إنشاء عملية التحديث في الخلفية (Ajax Callback Process)
