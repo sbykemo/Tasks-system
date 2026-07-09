@@ -881,7 +881,7 @@ function initKanbanSortable() {
 | الحقل | القيمة |
 |---|---|
 | Action | `Execute JavaScript Code` |
-| JavaScript Code | `initKanbanSortable();` |
+| JavaScript Code | `if (window.kanbanTimeout) { clearTimeout(window.kanbanTimeout); } window.kanbanTimeout = setTimeout(function() { initKanbanSortable(); }, 250);` |
 | Fire on Initialization | **`ON`** (تأكد من تفعيل هذا الخيار ليتم التشغيل عند فتح الصفحة أول مرة تلقائياً) |
 
 * اضغط **Save** وشغل الصفحة.
