@@ -798,18 +798,18 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 > 3. ستجد خياراً اسمه **Require jQuery UI**، قم بتفعيله واجعله **`ON`**. (هذه أهم خطوة وبدونها لن يعمل السحب نهائياً!).
 
 4. في نفس خصائص الصفحة، ابحث عن قسم **JavaScript**.
-5. في حقل **Execute when Page Loads**، الصق الكود التالي (لاحظ استخدام `.t-Cards` وهو المعرّف الافتراضي لكروت APEX):
+5. في حقل **Execute when Page Loads**، الصق الكود التالي (يدعم جميع قوالب الكروت):
 
 ```javascript
 // تفعيل السحب والإفلات التفاعلي بين الأعمدة الأربعة
-$("#col_created .t-Cards, #col_in_progress .t-Cards, #col_on_hold .t-Cards, #col_completed .t-Cards").sortable({
-    connectWith: "#col_created .t-Cards, #col_in_progress .t-Cards, #col_on_hold .t-Cards, #col_completed .t-Cards",
+$(".tts-kanban-col .a-CardList-items, .tts-kanban-col .t-Cards").sortable({
+    connectWith: ".tts-kanban-col .a-CardList-items, .tts-kanban-col .t-Cards",
     placeholder: "ui-state-highlight-placeholder",
     cursor: "move",
     opacity: 0.85,
     receive: function(event, ui) {
         // 1. الحصول على ID المهمة المسحوبة من الكارت
-        var taskId = ui.item.find(".tts-card-title").attr("data-id") || ui.item.find("[data-task-id]").data("task-id") || ui.item.attr("data-id");
+        var taskId = ui.item.find(".tts-card-title").attr("data-id") || ui.item.find(".a-CardList-title").attr("data-id") || ui.item.find("[data-task-id]").data("task-id") || ui.item.attr("data-id");
         
         // 2. تحديد العمود الجديد الذي سقطت فيه المهمة لمعرفة الحالة الجديدة
         var targetColId = ui.item.closest(".tts-kanban-col").attr("id");
@@ -849,15 +849,6 @@ $("#col_created .t-Cards, #col_in_progress .t-Cards, #col_on_hold .t-Cards, #col
 }).disableSelection();
 ```
 
-3. لتمرير الـ ID في الكارت بشكل صحيح لتتمكن لغة JavaScript من قراءته أثناء السحب:
-   - اذهب إلى تبويب **Attributes** على اليمين.
-   - انزل لأسفل حتى تجد قسم **Title** (العنوان).
-   - قم بتفعيل خيار **Advanced Formatting** (اجعل التوجل **ON**).
-   - ستظهر لك خانة جديدة بعنوان **HTML Expression**، قم بلصق الكود التالي فيها:
-     ```html
-     <span class="a-CardList-title" data-id="&TASK_ID." data-task-id="&TASK_ID.">&TITLE.</span>
-     ```
-   - *(ملحوظة: هذا يجعل الكود يمرر الـ ID الخاص بكل مهمة كـ attribute في الـ HTML ليقرأه الجافا سكربت بنجاح)*.
 
 ### الخطوة 4: إنشاء عملية التحديث في الخلفية (Ajax Callback Process)
 1. في Page Designer → اذهب إلى الـ **Processing** tab (أيقونة الترس الدائري في اليسار).
