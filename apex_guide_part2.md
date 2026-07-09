@@ -1056,16 +1056,19 @@ END;
 
 # 📄 Page 8: Users Management
 
-## الخطوة 8.1: إنشاء الصفحة
+هذه الصفحة مقسمة إلى جزئين رئيسيين: 
+1. **صفحة عرض وإدارة المستخدمين (Page 8):** عبارة عن تقرير تفاعلي (Interactive Report).
+2. **صفحة نموذج إضافة وتعديل مستخدم (Page 15):** عبارة عن نموذج منبثق (Modal Dialog) يتم استدعاؤه عند الإضافة أو التعديل.
 
-1. **Create Page** → **Interactive Report**
+---
 
-| الحقل | القيمة |
-|---|---|
-| Page Number | `8` |
-| Name | `Users Management` |
-| Authorization | `IS_ADMIN` |
+## الخطوة 8.1: إعداد صفحة التقرير التفاعلي (Page 8)
 
+1. **أنشئ صفحة جديدة** من نوع **Interactive Report**:
+   * **Page Number**: `8`
+   * **Name**: `Users Management`
+   * **Authorization**: `IS_ADMIN` (حماية الصفحة للمدير فقط)
+   * **SQL Query Source**:
 ```sql
 SELECT u.user_id, u.username, u.email, u.full_name,
        u.role, d.dept_name, m.full_name AS manager_name,
@@ -1076,26 +1079,149 @@ LEFT JOIN tts_users m ON m.user_id = u.manager_id
 ORDER BY u.full_name
 ```
 
-2. أضف زر **Add User** يفتح Modal Form لإنشاء مستخدم جديد.
+2. **إنشاء زر الإضافة (Add User):**
+   * في شجرة المكونات اليسرى، اضغط بالزر الأيمن على منطقة الـ Breadcrumb أو Region Header واختر **Create Button**.
+   * **Button Name**: `ADD_USER`
+   * **Label**: `Add User`
+   * **Button Position**: `Right of Title` (أو Hot)
+   * **Action**: اختر **Redirect to Page in this Application**.
+   * **Target**: اضغط على الرابط واضبطه كالتالي:
+     * **Page**: `15` (صفحة النموذج المنبثق التي سننشئها بالخطوة التالية)
+     * **Clear Cache**: اكتب `15`
 
-3. في الـ Modal Form أضف حقول: `P8_USERNAME`, `P8_PASSWORD`, `P8_EMAIL`, `P8_FULL_NAME`, `P8_ROLE` (LOV: LOV_USER_ROLES), `P8_DEPT_ID` (LOV: LOV_DEPARTMENTS), `P8_MANAGER_ID` (LOV: LOV_USERS_ACTIVE).
+---
 
-4. Process لحفظ المستخدم:
+## الخطوة 8.2: إنشاء صفحة النموذج المنبثق (Page 15: User Form)
 
+سنقوم بإنشاء صفحة منفصلة من نوع **Modal Dialog** لتعمل كـ Form منبثق لإضافة أو تعديل المستخدم:
+
+1. اضغط على **Create Page** في شريط الأدوات العلوي.
+2. اختر **Blank Page** (صفحة فارغة):
+   * **Page Number**: `15`
+   * **Name**: `User Form`
+   * **Page Mode**: اختر **Modal Dialog** (صفحة حوارية منبثقة)
+   * **Authorization**: `IS_ADMIN`
+3. في صفحة `15` الجديدة، اضغط بالزر الأيمن على **Content Body** واختر **Create Region**:
+   * **Title**: `User Details`
+   * **Type**: `Form`
+   * **Source -> Table Name**: `TTS_USERS`
+   * **Source -> Primary Key Column**: `USER_ID`
+
+4. **إنشاء الحقول داخل ريجين الـ Form (Page Items):**
+   قم بإنشاء الحقول التالية تحت ريجين `User Details`:
+
+   * **P15_USER_ID** (معرف المستخدم):
+     * **Type**: `Hidden`
+   * **P15_USERNAME** (اسم المستخدم):
+     * **Type**: `Text Field`
+     * **Value Required**: `True`
+     * **Read Only -> Type**: اختر `Item is NOT NULL` -> وحدد Item: `P15_USER_ID` (هذا يمنع تعديل اسم المستخدم بعد إنشائه).
+   * **P15_PASSWORD** (كلمة المرور):
+     * **Type**: `Password`
+     * **Value Required**: `True` (مطلوب فقط عند الإنشاء)
+     * **Server-side Condition -> Type**: اختر `Item is NULL` -> وحدد Item: `P15_USER_ID` (هذا يجعل حقل كلمة المرور يظهر فقط عند إضافة مستخدم جديد، ويختفي تماماً عند تعديل بيانات مستخدم موجود).
+   * **P15_EMAIL** (البريد الإلكتروني):
+     * **Type**: `Text Field`
+     * **Value Required**: `True`
+   * **P15_FULL_NAME** (الاسم بالكامل):
+     * **Type**: `Text Field`
+     * **Value Required**: `True`
+   * **P15_ROLE** (الصلاحية):
+     * **Type**: `Select List`
+     * **List of Values -> Type**: `Shared Component`
+     * **List of Values**: `LOV_USER_ROLES` (أو LOV ثابتة بقيم: ADMIN, MANAGER, EMPLOYEE)
+     * **Value Required**: `True`
+   * **P15_DEPT_ID** (القسم):
+     * **Type**: `Select List`
+     * **List of Values -> Type**: `Shared Component`
+     * **List of Values**: `LOV_DEPARTMENTS`
+   * **P15_MANAGER_ID** (المدير المباشر):
+     * **Type**: `Select List`
+     * **List of Values -> Type**: `Shared Component`
+     * **List of Values**: `LOV_USERS_ACTIVE`
+   * **P15_IS_ACTIVE** (حالة الحساب نشط أم لا):
+     * **Type**: `Switch` (أو Select List بقيم Y و N)
+     * **Server-side Condition -> Type**: اختر `Item is NOT NULL` -> وحدد Item: `P15_USER_ID` (يظهر فقط عند التعديل).
+
+5. **إنشاء الأزرار (Buttons) في الصفحة 15:**
+   * زر **CANCEL** (إلغاء):
+     * **Position**: `Close`
+     * **Action**: `Redirect to Page/URL` (أو سلوك إغلاق النافذة)
+   * زر **SUBMIT** (حفظ / إنشاء):
+     * **Button Name**: `SAVE` (أو CREATE)
+     * **Label**: `Save`
+     * **Position**: `Change` (أو Region Positions)
+     * **Action**: `Submit Page`
+
+---
+
+## الخطوة 8.3: إعداد عمليات الحفظ والإغلاق (Processing Page 15)
+
+اذهب إلى تبويب المعالجة **Processing** (أيقونة الترس في القائمة اليسرى لصفحة 15):
+
+1. **إنشاء عملية حفظ البيانات (Process User):**
+   * اضغط بالزر الأيمن على **Processing** واختر **Create Process**.
+   * **Name**: `Process_User`
+   * **Type**: `PL/SQL Code`
+   * **PL/SQL Code**:
 ```sql
 BEGIN
-    tts_pkg_admin.create_user(
-        p_username   => :P8_USERNAME,
-        p_password   => :P8_PASSWORD,
-        p_email      => :P8_EMAIL,
-        p_full_name  => :P8_FULL_NAME,
-        p_role       => :P8_ROLE,
-        p_dept_id    => TO_NUMBER(:P8_DEPT_ID),
-        p_manager_id => TO_NUMBER(:P8_MANAGER_ID)
-    );
-    COMMIT;
+    IF :P15_USER_ID IS NULL THEN
+        -- 1. إنشاء مستخدم جديد وتشفير كلمة مروره عبر الباكج المخصصة
+        tts_pkg_admin.create_user(
+            p_username   => :P15_USERNAME,
+            p_password   => :P15_PASSWORD,
+            p_email      => :P15_EMAIL,
+            p_full_name  => :P15_FULL_NAME,
+            p_role       => :P15_ROLE,
+            p_dept_id    => TO_NUMBER(:P15_DEPT_ID),
+            p_manager_id => TO_NUMBER(:P15_MANAGER_ID)
+        );
+    ELSE
+        -- 2. تحديث بيانات مستخدم موجود بالفعل
+        UPDATE tts_users
+        SET    email      = :P15_EMAIL,
+               full_name  = :P15_FULL_NAME,
+               role       = :P15_ROLE,
+               dept_id    = TO_NUMBER(:P15_DEPT_ID),
+               manager_id = TO_NUMBER(:P15_MANAGER_ID),
+               is_active  = :P15_IS_ACTIVE
+        WHERE  user_id    = TO_NUMBER(:P15_USER_ID);
+        
+        COMMIT;
+    END IF;
 END;
 ```
+
+2. **إنشاء عملية إغلاق النموذج المنبثق (Close Dialog):**
+   * اضغط بالزر الأيمن على **Processing** → **Create Process**.
+   * **Name**: `Close_Dialog`
+   * **Type**: اختر **Close Dialog** (هذه العملية مدمجة في APEX وتقوم بإغلاق الـ Modal وتحديث بيانات الصفحة الأب تلقائياً).
+   * **Execution Sequence**: تأكد أن ترتيبها **بعد** عملية الـ `Process_User`.
+
+---
+
+## الخطوة 8.4: ربط رابط التعديل (Edit Link) في الصفحة 8
+
+لكي يفتح التقرير التفاعلي في صفحة 8 نافذة التعديل (صفحة 15) عند الضغط على مستخدم معين:
+
+1. ارجع إلى **Page 8: Users Management**.
+2. في شجرة المكونات اليسرى، اختر منطقة التقرير التفاعلي **Users Management**.
+3. في اللوحة اليمنى، اذهب إلى تبويب **Attributes** (بجوار تبويب Region).
+4. انزل لقسم **Link Column** واضبط الخصائص كالتالي:
+   * **Link Column**: اختر **Link to Custom Target**.
+   * **Link Icon**: اختر أيقونة التعديل القياسية (مثلاً `fa-pencil` أو `pencil-square`).
+   * **Target**: اضغط على الرابط واضبطه كالتالي:
+     * **Page**: `15`
+     * **Set Items**:
+       * Item Name: `P15_USER_ID`
+       * Value: `#USER_ID#` (هذا يمرر الـ ID الخاص بالمستخدم المختار إلى النافذة المنبثقة)
+     * **Clear Cache**: `15`
+5. اضغط **Save** وشغل الصفحة 8.
+
+الآن، عند الضغط على زر **Add User** ستفتح نافذة منبثقة نظيفة لإدخال بيانات مستخدم جديد بكلمة مرور. وعند الضغط على أيقونة التعديل بجوار أي مستخدم، ستفتح نفس النافذة محملة ببياناته لتعديلها مع إخفاء حقل كلمة المرور وإظهار حقل تفعيل الحساب!
+
+---
 
 ---
 
