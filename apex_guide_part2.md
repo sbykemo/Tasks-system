@@ -866,9 +866,17 @@ function initKanbanSortable() {
 // 1. تشغيل السحب عند تحميل الصفحة لأول مرة
 initKanbanSortable();
 
-// 2. إعادة تفعيل السحب تلقائياً بعد كل عملية Refresh لأي عمود
-$("#col_created, #col_in_progress, #col_on_hold, #col_completed").on("apexafterrefresh", function() {
-    initKanbanSortable();
+// 2. إعادة تفعيل السحب تلقائياً وبأمان بعد انتهاء تحديث الأعمدة (تجنب تداخل الـ Refresh المتزامن)
+$(document).on("apexafterrefresh", function(e) {
+    if ($(e.target).hasClass("tts-kanban-col") || e.target.id.indexOf("col_") === 0) {
+        if (window.kanbanTimeout) {
+            clearTimeout(window.kanbanTimeout);
+        }
+        // انتظار 200 مللي ثانية حتى تستقر كل الأعمدة المنعشة بالكامل ثم تفعيل السحب
+        window.kanbanTimeout = setTimeout(function() {
+            initKanbanSortable();
+        }, 200);
+    }
 });
 ```
 
