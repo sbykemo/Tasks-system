@@ -868,11 +868,15 @@ $(".tts-kanban-board .a-CardList-items").sortable({
 }).disableSelection();
 ```
 
-3. لتمرير الـ ID في الكارت بشكل صحيح, اذهب إلى منطقة الـ Cards Attributes:
-   - **Card HTML Expression** (أو **Title HTML Expression**):
-   ```html
-   <span class="a-CardList-title" data-id="&TASK_ID." data-task-id="&TASK_ID.">&TITLE.</span>
-   ```
+3. لتمرير الـ ID في الكارت بشكل صحيح لتتمكن لغة JavaScript من قراءته أثناء السحب:
+   - اذهب إلى تبويب **Attributes** على اليمين.
+   - انزل لأسفل حتى تجد قسم **Title** (العنوان).
+   - قم بتفعيل خيار **Advanced Formatting** (اجعل التوجل **ON**).
+   - ستظهر لك خانة جديدة بعنوان **HTML Expression**، قم بلصق الكود التالي فيها:
+     ```html
+     <span class="a-CardList-title" data-id="&TASK_ID." data-task-id="&TASK_ID.">&TITLE.</span>
+     ```
+   - *(ملحوظة: هذا يجعل الكود يمرر الـ ID الخاص بكل مهمة كـ attribute في الـ HTML ليقرأه الجافا سكربت بنجاح)*.
 
 ### الخطوة 4: إنشاء عملية التحديث في الخلفية (Ajax Callback Process)
 1. في Page Designer → اذهب إلى الـ **Processing** tab (أيقونة الترس الدائري في اليسار).
