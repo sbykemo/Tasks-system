@@ -789,20 +789,26 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 
 ---
 
-### الخطوة 6.5: تفعيل السحب والإفلات (Drag & Drop JavaScript)
-1. افتح **خصائص الصفحة 6** (اضغط على اسم الصفحة "Page 6: Kanban Board" في أعلى شجرة المكونات اليسرى).
-2. في اللوحة اليمنى، ابحث عن قسم **JavaScript**.
-3. في حقل **Execute when Page Loads**، الصق الكود التالي:
+### الخطوة 6.5: تفعيل مكتبة السحب والإفلات (Require jQuery UI & JS)
+
+> [!IMPORTANT]
+> بما أننا نعمل على صفحة فارغة (Blank Page)، فإن APEX لا يقوم بتحميل مكتبة السحب والإفلات بشكل تلقائي. لتفعيلها:
+> 1. افتح **خصائص الصفحة 6** (اضغط على اسم الصفحة "Page 6: Kanban Board" في أعلى شجرة المكونات اليسرى).
+> 2. في اللوحة اليمنى، انزل لأسفل حتى تصل إلى قسم **Advanced** (خيارات متقدمة).
+> 3. ستجد خياراً اسمه **Require jQuery UI**، قم بتفعيله واجعله **`ON`**. (هذه أهم خطوة وبدونها لن يعمل السحب نهائياً!).
+
+4. في نفس خصائص الصفحة، ابحث عن قسم **JavaScript**.
+5. في حقل **Execute when Page Loads**، الصق الكود التالي (لاحظ استخدام `.t-Cards` وهو المعرّف الافتراضي لكروت APEX):
 
 ```javascript
 // تفعيل السحب والإفلات التفاعلي بين الأعمدة الأربعة
-$("#col_created .a-CardList-items, #col_in_progress .a-CardList-items, #col_on_hold .a-CardList-items, #col_completed .a-CardList-items").sortable({
-    connectWith: "#col_created .a-CardList-items, #col_in_progress .a-CardList-items, #col_on_hold .a-CardList-items, #col_completed .a-CardList-items",
+$("#col_created .t-Cards, #col_in_progress .t-Cards, #col_on_hold .t-Cards, #col_completed .t-Cards").sortable({
+    connectWith: "#col_created .t-Cards, #col_in_progress .t-Cards, #col_on_hold .t-Cards, #col_completed .t-Cards",
     placeholder: "ui-state-highlight-placeholder",
     cursor: "move",
     opacity: 0.85,
     receive: function(event, ui) {
-        // 1. الحصول على ID المهمة المسحوبة
+        // 1. الحصول على ID المهمة المسحوبة من الكارت
         var taskId = ui.item.find(".tts-card-title").attr("data-id") || ui.item.find("[data-task-id]").data("task-id") || ui.item.attr("data-id");
         
         // 2. تحديد العمود الجديد الذي سقطت فيه المهمة لمعرفة الحالة الجديدة
@@ -830,10 +836,13 @@ $("#col_created .a-CardList-items, #col_in_progress .a-CardList-items, #col_on_h
                 apex.message.showErrors([{
                     type: "error",
                     location: "page",
-                    message: "Failed to update task status: " + jqXHR.responseText
+                    message: "Failed to update status: " + jqXHR.responseText
                 }]);
                 // إعادة الكارت لمكانه الأصلي في حالة الفشل
-                apex.region("tts_kanban").refresh();
+                apex.region("col_created").refresh();
+                apex.region("col_in_progress").refresh();
+                apex.region("col_on_hold").refresh();
+                apex.region("col_completed").refresh();
             }
         });
     }
