@@ -738,22 +738,40 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 ```
 
 ### الخطوة 4: ضبط خصائص الكروت (Attributes) لكل عمود
-كرر الإعدادات التالية في الـ **Attributes** لكل منطقة Cards من الأربعة:
-- **Primary Key Column**: `TASK_ID`
-- **Title** → Column: `TITLE`
-- **Subtitle** → Column: `TASK_NUMBER`
-- **Body** → Column: `ASSIGNED_TO_NAME`
-- **Secondary Body** → HTML Expression: 
-  ```html
-  <div class="card-meta">
-      <span class="status-badge #CARD_CSS#">#PRIORITY_DISPLAY#</span>
-      <span class="due-date &LOG_CSS.">Due: #DUE_DATE# (#DAYS_REMAINING#d remaining)</span>
-  </div>
-  ```
-- **Card CSS Classes**: `tts-task-card #CARD_CSS#`
-- **Card Link**: 
-  - Target: `Page 5` (Task Details)
-  - Set Items: Name: `P5_TASK_ID` | Value: `&TASK_ID.`
+كرر الإعدادات التالية في الـ **Attributes** (تبويب Attributes بجانب تبويب Region في الجزء الأيمن من شاشة Page Designer) لكل منطقة Cards من الأربعة:
+
+1. **Primary Key Column** (قسم Source):
+   - اختر: `TASK_ID`
+
+2. **Title** (قسم Card):
+   - Column: `TITLE`
+
+3. **Subtitle** (قسم Card):
+   - Column: `TASK_NUMBER`
+
+4. **Body** (قسم Card):
+   - Column: `ASSIGNED_TO_NAME`
+
+5. **Secondary Body** (قسم Card):
+   - قم بتفعيل خيار **Advanced Formatting** (اجعل التوجل ON).
+   - في حقل **HTML Expression** الذي سيظهر، الصق الكود التالي (تأكد من كتابة رموز `&` والنقطة في النهاية لاستبدال القيم ديناميكياً):
+     ```html
+     <div class="card-meta">
+         <span class="status-badge &CARD_CSS.">&PRIORITY_DISPLAY.</span>
+         <span class="due-date">Due: &DUE_DATE. (&DAYS_REMAINING.d remaining)</span>
+     </div>
+     ```
+
+6. **CSS Classes** (قسم Card -> حقل **CSS Classes**):
+   - الصق: `tts-task-card &CARD_CSS.`
+   - *(ملحوظة: هذا الحقل يقوم بتلوين حواف الكارت حسب الأولوية باستخدام كود الـ CSS المخصص)*.
+
+7. **Link** (قسم Card -> حقل **Link** -> اضغط على **Target**):
+   - **Type**: `Redirect to Page in this Application`
+   - **Page**: `5`
+   - **Set Items**:
+     - Name: `P5_TASK_ID` | Value: `&TASK_ID.`
+   - *(ملحوظة هامة: هذا الرابط لجعل الكارت بالكامل قابلاً للنقر لفتح صفحة التفاصيل، وهو غير متعلق بقسم Media)*.
 
 ### الخطوة 5: إضافة أزرار الحركة السريعة (Actions)
 في كل منطقة Cards، يمكنك إدراج زر حركة لتسهيل التحديث:
