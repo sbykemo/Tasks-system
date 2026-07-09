@@ -816,6 +816,17 @@ function initKanbanSortable() {
         placeholder: "ui-state-highlight-placeholder",
         cursor: "move",
         opacity: 0.85,
+        appendTo: "body",
+        helper: function(e, item) {
+            // عمل نسخة من الكارت للحفاظ على عرضه وأبعاده وتجنب اختفائه خلف الأعمدة
+            var clone = item.clone();
+            clone.css({
+                "width": item.width() + "px",
+                "z-index": 9999,
+                "pointer-events": "none"
+            });
+            return clone;
+        },
         receive: function(event, ui) {
             // 1. الحصول على ID المهمة المسحوبة من الكارت
             var taskId = ui.item.find(".tts-card-title").attr("data-id") || 
