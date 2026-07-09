@@ -801,60 +801,75 @@ ORDER BY DECODE(priority,'CRITICAL',1,'HIGH',2,'MEDIUM',3,'LOW',4), due_date
 3. في حقل **Execute when Page Loads**، الصق الكود المحدث التالي بالكامل:
 
 ```javascript
-// تفعيل السحب والإفلات التفاعلي بربط الأعمدة الأربعة يدوياً عبر الـ IDs (يدعم APEX 24.2)
-var sortableSelector = "#col_created .a-CardView-items, " +
-                       "#col_in_progress .a-CardView-items, " +
-                       "#col_on_hold .a-CardView-items, " +
-                       "#col_completed .a-CardView-items";
+function initKanbanSortable() {
+    var sortableSelector = "#col_created .a-CardView-items, " +
+                           "#col_in_progress .a-CardView-items, " +
+                           "#col_on_hold .a-CardView-items, " +
+                           "#col_completed .a-CardView-items";
+    
+    // إزالة السحب القديم أولاً لمنع التكرار (تدمير الـ instance القديم)
+    try {
+        $(sortableSelector).sortable("destroy");
+    } catch (e) {}
 
-$(sortableSelector).sortable({
-    connectWith: sortableSelector,
-    placeholder: "ui-state-highlight-placeholder",
-    cursor: "move",
-    opacity: 0.85,
-    receive: function(event, ui) {
-        // 1. الحصول على ID المهمة المسحوبة من الكارت
-        var taskId = ui.item.find(".tts-card-title").attr("data-id") || 
-                     ui.item.find("[data-task-id]").data("task-id") || 
-                     ui.item.attr("data-id");
-        
-        // 2. تحديد العمود الجديد الذي سقطت فيه المهمة لمعرفة الحالة الجديدة
-        var targetColId = ui.item.closest(".tts-kanban-col").attr("id") || 
-                          ui.item.closest("[id^=col_]").attr("id");
-        
-        var newStatus = 'CREATED';
-        if (targetColId === 'col_in_progress') newStatus = 'IN_PROGRESS';
-        else if (targetColId === 'col_on_hold') newStatus = 'ON_HOLD';
-        else if (targetColId === 'col_completed') newStatus = 'COMPLETED';
+    // تفعيل السحب والإفلات التفاعلي
+    $(sortableSelector).sortable({
+        connectWith: sortableSelector,
+        placeholder: "ui-state-highlight-placeholder",
+        cursor: "move",
+        opacity: 0.85,
+        receive: function(event, ui) {
+            // 1. الحصول على ID المهمة المسحوبة من الكارت
+            var taskId = ui.item.find(".tts-card-title").attr("data-id") || 
+                         ui.item.find("[data-task-id]").data("task-id") || 
+                         ui.item.attr("data-id");
+            
+            // 2. تحديد العمود الجديد الذي سقطت فيه المهمة لمعرفة الحالة الجديدة
+            var targetColId = ui.item.closest(".tts-kanban-col").attr("id") || 
+                              ui.item.closest("[id^=col_]").attr("id");
+            
+            var newStatus = 'CREATED';
+            if (targetColId === 'col_in_progress') newStatus = 'IN_PROGRESS';
+            else if (targetColId === 'col_on_hold') newStatus = 'ON_HOLD';
+            else if (targetColId === 'col_completed') newStatus = 'COMPLETED';
 
-        // 3. استدعاء Ajax Callback لتحديث قاعدة البيانات
-        apex.server.process("KANBAN_STATUS_CHANGE", {
-            x01: taskId,
-            x02: newStatus
-        }, {
-            success: function(data) {
-                apex.message.showPageSuccess("Task status updated!");
-                // تحديث الأعمدة الأربعة لإظهار البيانات متناسقة
-                apex.region("col_created").refresh();
-                apex.region("col_in_progress").refresh();
-                apex.region("col_on_hold").refresh();
-                apex.region("col_completed").refresh();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                apex.message.showErrors([{
-                    type: "error",
-                    location: "page",
-                    message: "Failed to update status: " + jqXHR.responseText
-                }]);
-                // إعادة الكارت لمكانه الأصلي في حالة الفشل
-                apex.region("col_created").refresh();
-                apex.region("col_in_progress").refresh();
-                apex.region("col_on_hold").refresh();
-                apex.region("col_completed").refresh();
-            }
-        });
-    }
-}).disableSelection();
+            // 3. استدعاء Ajax Callback لتحديث قاعدة البيانات
+            apex.server.process("KANBAN_STATUS_CHANGE", {
+                x01: taskId,
+                x02: newStatus
+            }, {
+                success: function(data) {
+                    apex.message.showPageSuccess("Task status updated!");
+                    // تحديث الأعمدة الأربعة لإظهار البيانات متناسقة
+                    apex.region("col_created").refresh();
+                    apex.region("col_in_progress").refresh();
+                    apex.region("col_on_hold").refresh();
+                    apex.region("col_completed").refresh();
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    apex.message.showErrors([{
+                        type: "error",
+                        location: "page",
+                        message: "Failed to update status: " + jqXHR.responseText
+                    }]);
+                    // إعادة الكارت لمكانه الأصلي في حالة الفشل
+                    apex.region("col_created").refresh();
+                    apex.region("col_in_progress").refresh();
+                    apex.region("col_on_hold").refresh();
+                    apex.region("col_completed").refresh();
+                }
+            });
+        }
+    }).disableSelection();
+}
+
+// 1. تشغيل السحب عند تحميل الصفحة لأول مرة
+initKanbanSortable();
+
+// 2. إعادة تفعيل السحب تلقائياً بعد كل عملية Refresh لأي عمود
+$("#col_created, #col_in_progress, #col_on_hold, #col_completed").on("apexafterrefresh", function() {
+    initKanbanSortable();
+});
 ```
 
 
