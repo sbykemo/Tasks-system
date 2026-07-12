@@ -43,28 +43,28 @@ SELECT
     'Total Tasks' AS card_title,
     TO_CHAR(total_tasks) AS card_text,
     'fa-tasks' AS card_icon,
-    NULL AS card_link
+    'f?p=&APP_ID.:3:&SESSION.::NO:RIR::' AS card_link
 FROM v_dashboard_stats
 UNION ALL
 SELECT 
     'In Progress',
     TO_CHAR(in_progress_count),
     'fa-spinner fa-anim-spin',
-    'f?p=&APP_ID.:3:&SESSION.::NO::P3_STATUS:IN_PROGRESS'
+    'f?p=&APP_ID.:3:&SESSION.::NO:RIR:IR_STATUS:IN_PROGRESS'
 FROM v_dashboard_stats
 UNION ALL
 SELECT 
     'On Hold',
     TO_CHAR(on_hold_count),
     'fa-pause-circle',
-    'f?p=&APP_ID.:3:&SESSION.::NO::P3_STATUS:ON_HOLD'
+    'f?p=&APP_ID.:3:&SESSION.::NO:RIR:IR_STATUS:ON_HOLD'
 FROM v_dashboard_stats
 UNION ALL
 SELECT 
     'Overdue',
     TO_CHAR(overdue_count),
     'fa-warning',
-    NULL
+    'f?p=&APP_ID.:3:&SESSION.::NO:RIR:IR_IS_OVERDUE:Y'
 FROM v_dashboard_stats
 UNION ALL
 SELECT 
