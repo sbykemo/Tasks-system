@@ -929,20 +929,204 @@ END;
 
 ## 🎨 تنسيق الـ CSS المخصص لـ Kanban Board (أضفه في Page CSS Inline)
 ```css
-/* تلوين عناوين الأعمدة لتمييز الحالات */
-#col_created .t-CardsRegion-title { color: #1a73e8 !important; font-weight: 700 !important; }
-#col_in_progress .t-CardsRegion-title { color: #fbbc04 !important; font-weight: 700 !important; }
-#col_on_hold .t-CardsRegion-title { color: #ea4335 !important; font-weight: 700 !important; }
-#col_completed .t-CardsRegion-title { color: #34a853 !important; font-weight: 700 !important; }
+/* ==========================================
+   TTS Premium Kanban Board Styles
+   ========================================== */
 
-/* جعل الأعمدة رمادية فاتحة لتبدو كلوحة حقيقية */
+/* 1. تنسيق الحاوية الرئيسية والأعمدة */
 .tts-kanban-col {
-    background-color: #f8f9fa !important;
+    background: #f8fafc !important; /* لون رمادي مزرق خفيف وجذاب */
     border: 1px solid #e2e8f0 !important;
-    border-radius: 8px !important;
-    padding: 12px !important;
-    min-height: 600px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    min-height: 650px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+    transition: background-color 0.2s ease;
+}
+
+/* تمييز العمود النشط أثناء سحب كارت فوقه */
+.ui-sortable-hover {
+    background-color: #edf2f7 !important;
+}
+
+/* 2. تنسيق عناوين الأعمدة بشكل احترافي */
+.tts-kanban-col .t-Region-header {
+    border-bottom: 2px solid #e2e8f0 !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 8px !important;
+    background: transparent !important;
+}
+
+.tts-kanban-col .t-Region-title {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+/* ألوان مخصصة لكل حالة في العناوين مع حدود سفلية ملونة */
+#col_created { border-top: 4px solid #3b82f6 !important; }
+#col_created .t-Region-title { color: #1e3a8a !important; }
+
+#col_in_progress { border-top: 4px solid #eab308 !important; }
+#col_in_progress .t-Region-title { color: #713f12 !important; }
+
+#col_on_hold { border-top: 4px solid #ef4444 !important; }
+#col_on_hold .t-Region-title { color: #7f1d1d !important; }
+
+#col_completed { border-top: 4px solid #10b981 !important; }
+#col_completed .t-Region-title { color: #064e3b !important; }
+
+/* 3. التنسيق الفاخر للكروت الفردية */
+.tts-task-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: grab !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.tts-task-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    border-color: #cbd5e1 !important;
+}
+
+.tts-task-card:active {
+    cursor: grabbing !important;
+}
+
+/* تأثير السحب الطافي للكارت الجاري سحبه */
+.ui-sortable-helper {
+    transform: rotate(2deg) scale(1.02) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    opacity: 0.95 !important;
+    cursor: grabbing !important;
+}
+
+/* 4. تنسيق أشرطة الأولويات على جانب الكارت */
+.tts-task-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background-color: #cbd5e1; /* اللون الافتراضي */
+}
+.tts-task-card.priority-critical::before { background-color: #b91c1c !important; }
+.tts-task-card.priority-high::before { background-color: #ef4444 !important; }
+.tts-task-card.priority-medium::before { background-color: #f59e0b !important; }
+.tts-task-card.priority-low::before { background-color: #10b981 !important; }
+
+/* 5. تنسيق المحتوى الداخلي للكارت */
+/* كود المهمة (Task Number) كحبة دواء رمادية */
+.a-CardView-subTitle {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    padding: 3px 8px !important;
+    border-radius: 20px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    display: inline-block !important;
+    margin-bottom: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* عنوان المهمة الأساسي */
+.tts-card-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.4 !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+
+/* اسم الموظف */
+.a-CardView-mainContent {
+    font-size: 12px !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+}
+
+.a-CardView-mainContent::before {
+    content: '\f007'; /* أيقونة مستخدم من FontAwesome */
+    font-family: 'FontAwesome' !important;
+    color: #94a3b8 !important;
+}
+
+/* 6. شارات الأولوية وتاريخ الاستحقاق في الأسفل */
+.card-meta {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-top: 1px solid #f1f5f9 !important;
+    padding-top: 10px !important;
+    margin-top: 8px !important;
+}
+
+/* شارات الأولوية الملونة بنعومة */
+.status-badge {
+    padding: 3px 10px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+}
+.status-badge.priority-critical { background: #fee2e2 !important; color: #991b1b !important; }
+.status-badge.priority-high { background: #fee2e2 !important; color: #c2410c !important; }
+.status-badge.priority-medium { background: #fef3c7 !important; color: #92400e !important; }
+.status-badge.priority-low { background: #d1fae5 !important; color: #065f46 !important; }
+
+/* تاريخ الاستحقاق */
+.due-date {
+    font-size: 11px !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.due-date::before {
+    content: '\f017'; /* أيقونة ساعة من FontAwesome */
+    font-family: 'FontAwesome' !important;
+    color: #94a3b8 !important;
+}
+
+/* 7. تنسيق المساحة الفارغة الذكية عند سحب كارت (Placeholder) */
+.ui-state-highlight-placeholder {
+    border: 2px dashed #3b82f6 !important;
+    background-color: rgba(59, 130, 246, 0.03) !important;
+    border-radius: 10px !important;
+    height: 100px !important;
+    margin-bottom: 14px !important;
+    visibility: visible !important;
+    position: relative !important;
+}
+
+.ui-state-highlight-placeholder::after {
+    content: 'Drop Here';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #3b82f6;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
 /* منع إخفاء القائمة عند خلو العمود من المهام للسماح بالإفلات */
@@ -955,54 +1139,6 @@ END;
 }
 .tts-kanban-col .a-GV-noDataMsg {
     display: none !important; /* إخفاء رسالة 'No data found' الافتراضية لمنع تداخلها */
-}
-
-/* تنسيق الكروت الفردية داخل الأعمدة */
-.tts-task-card {
-    background: white !important;
-    border-radius: 6px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
-    margin-bottom: 12px !important;
-    border-left: 4px solid #1a73e8 !important;
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: grab;
-}
-
-.tts-task-card:active {
-    cursor: grabbing;
-}
-
-.tts-task-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.12) !important;
-}
-
-.tts-task-card.priority-high { border-left-color: #ea4335 !important; }
-.tts-task-card.priority-critical { border-left-color: #b71c1c !important; }
-.tts-task-card.priority-medium { border-left-color: #fbbc04 !important; }
-.tts-task-card.priority-low { border-left-color: #34a853 !important; }
-
-/* تنسيق المساحة الفارغة عند سحب كارت */
-.ui-state-highlight-placeholder {
-    border: 2px dashed #1a73e8 !important;
-    background-color: rgba(26, 115, 232, 0.04) !important;
-    border-radius: 6px !important;
-    height: 90px !important;
-    margin-bottom: 12px !important;
-    visibility: visible !important;
-}
-
-/* تنسيق حقول الميتا للكارت */
-.card-meta {
-    margin-top: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-}
-.card-meta .due-date {
-    color: #5f6368;
-    font-weight: 500;
 }
 ```
 
