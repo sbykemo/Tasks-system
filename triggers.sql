@@ -95,25 +95,32 @@ PROMPT Creating trigger: trg_daily_log_calc...
 CREATE OR REPLACE TRIGGER trg_daily_log_calc
     AFTER INSERT OR UPDATE OR DELETE ON tts_daily_log
     FOR EACH ROW
-DECLARE
-    v_task_id NUMBER;
-    v_total   NUMBER;
 BEGIN
-    -- Determine which task to recalculate
-    -- On DELETE, :NEW is NULL so we use :OLD
-    v_task_id := NVL(:NEW.task_id, :OLD.task_id);
-    
-    -- Sum all daily log entries for this task
-    SELECT NVL(SUM(hours_spent), 0)
-    INTO   v_total
-    FROM   tts_daily_log
-    WHERE  task_id = v_task_id;
-    
-    -- Update the task's actual_hours with the computed total
-    UPDATE tts_tasks
-    SET    actual_hours = v_total
-    WHERE  task_id = v_task_id;
-    
+    IF INSERTING THEN
+        UPDATE tts_tasks
+        SET    actual_hours = NVL(actual_hours, 0) + :NEW.hours_spent
+        WHERE  task_id = :NEW.task_id;
+        
+    ELSIF UPDATING THEN
+        IF :NEW.task_id = :OLD.task_id THEN
+            UPDATE tts_tasks
+            SET    actual_hours = NVL(actual_hours, 0) + (:NEW.hours_spent - :OLD.hours_spent)
+            WHERE  task_id = :NEW.task_id;
+        ELSE
+            UPDATE tts_tasks
+            SET    actual_hours = NVL(actual_hours, 0) - :OLD.hours_spent
+            WHERE  task_id = :OLD.task_id;
+            
+            UPDATE tts_tasks
+            SET    actual_hours = NVL(actual_hours, 0) + :NEW.hours_spent
+            WHERE  task_id = :NEW.task_id;
+        END IF;
+        
+    ELSIF DELETING THEN
+        UPDATE tts_tasks
+        SET    actual_hours = NVL(actual_hours, 0) - :OLD.hours_spent
+        WHERE  task_id = :OLD.task_id;
+    END IF;
 END trg_daily_log_calc;
 /
 
