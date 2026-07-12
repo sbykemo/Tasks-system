@@ -979,18 +979,27 @@ END;
 #col_completed { border-top: 4px solid #10b981 !important; }
 #col_completed .t-Region-title { color: #064e3b !important; }
 
-/* 3. التنسيق الفاخر للكروت الفردية */
-.tts-task-card {
+/* 3. التنسيق الفاخر والمدمج للكروت الفردية */
+.tts-task-card.a-CardView {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
-    padding: 14px !important;
-    margin-bottom: 14px !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     cursor: grab !important;
     position: relative !important;
     overflow: hidden !important;
+    min-height: 0 !important; /* إلغاء الارتفاع الزائد */
+    display: block !important; /* جعل العناصر تتراص عمودياً بشكل طبيعي */
+}
+
+.tts-task-card .a-CardView-header,
+.tts-task-card .a-CardView-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
 }
 
 .tts-task-card:hover {
@@ -1013,13 +1022,14 @@ END;
 
 /* 4. تنسيق أشرطة الأولويات على جانب الكارت */
 .tts-task-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    background-color: #cbd5e1; /* اللون الافتراضي */
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 6px !important;
+    background-color: #cbd5e1 !important; /* اللون الافتراضي */
+    z-index: 10 !important;
 }
 .tts-task-card.priority-critical::before { background-color: #b91c1c !important; }
 .tts-task-card.priority-high::before { background-color: #ef4444 !important; }
@@ -1028,82 +1038,84 @@ END;
 
 /* 5. تنسيق المحتوى الداخلي للكارت */
 /* كود المهمة (Task Number) كحبة دواء رمادية */
-.a-CardView-subTitle {
+.tts-task-card .a-CardView-subTitle {
     background: #f1f5f9 !important;
     color: #475569 !important;
-    padding: 3px 8px !important;
+    padding: 2px 8px !important;
     border-radius: 20px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     display: inline-block !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 8px !important;
+    margin-top: 4px !important;
     border: 1px solid #e2e8f0 !important;
 }
 
 /* عنوان المهمة الأساسي */
-.tts-card-title {
+.tts-task-card .tts-card-title {
     font-size: 14px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     line-height: 1.4 !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
     display: block !important;
 }
 
 /* اسم الموظف */
-.a-CardView-mainContent {
+.tts-task-card .a-CardView-mainContent {
     font-size: 12px !important;
     color: #64748b !important;
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 8px !important;
 }
 
-.a-CardView-mainContent::before {
-    content: '\f007'; /* أيقونة مستخدم من FontAwesome */
-    font-family: 'FontAwesome' !important;
-    color: #94a3b8 !important;
+.tts-task-card .a-CardView-mainContent::before {
+    content: '👤 ' !important; /* رمز تعبيري بديل لعدم تحميل الفونت */
+    font-size: 12px !important;
 }
 
 /* 6. شارات الأولوية وتاريخ الاستحقاق في الأسفل */
-.card-meta {
+.tts-task-card .card-meta {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     border-top: 1px solid #f1f5f9 !important;
-    padding-top: 10px !important;
+    padding-top: 8px !important;
     margin-top: 8px !important;
+    flex-wrap: nowrap !important;
 }
 
 /* شارات الأولوية الملونة بنعومة */
-.status-badge {
-    padding: 3px 10px !important;
-    border-radius: 6px !important;
+.tts-task-card .status-badge {
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.3px !important;
+    white-space: nowrap !important; /* منع التفاف الكلمات نهائياً */
 }
-.status-badge.priority-critical { background: #fee2e2 !important; color: #991b1b !important; }
-.status-badge.priority-high { background: #fee2e2 !important; color: #c2410c !important; }
-.status-badge.priority-medium { background: #fef3c7 !important; color: #92400e !important; }
-.status-badge.priority-low { background: #d1fae5 !important; color: #065f46 !important; }
+.tts-task-card .status-badge.priority-critical { background: #fee2e2 !important; color: #991b1b !important; }
+.tts-task-card .status-badge.priority-high { background: #fee2e2 !important; color: #c2410c !important; }
+.tts-task-card .status-badge.priority-medium { background: #fef3c7 !important; color: #92400e !important; }
+.tts-task-card .status-badge.priority-low { background: #d1fae5 !important; color: #065f46 !important; }
 
 /* تاريخ الاستحقاق */
-.due-date {
+.tts-task-card .due-date {
     font-size: 11px !important;
     color: #64748b !important;
     font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
+    white-space: nowrap !important;
 }
 
-.due-date::before {
-    content: '\f017'; /* أيقونة ساعة من FontAwesome */
-    font-family: 'FontAwesome' !important;
-    color: #94a3b8 !important;
+.tts-task-card .due-date::before {
+    content: '📅 ' !important; /* رمز تعبيري بديل للساعة */
+    font-size: 11px !important;
 }
 
 /* 7. تنسيق المساحة الفارغة الذكية عند سحب كارت (Placeholder) */
@@ -1111,8 +1123,8 @@ END;
     border: 2px dashed #3b82f6 !important;
     background-color: rgba(59, 130, 246, 0.03) !important;
     border-radius: 10px !important;
-    height: 100px !important;
-    margin-bottom: 14px !important;
+    height: 90px !important;
+    margin-bottom: 12px !important;
     visibility: visible !important;
     position: relative !important;
 }
@@ -1124,7 +1136,7 @@ END;
     top: 50%;
     transform: translate(-50%, -50%);
     color: #3b82f6;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
 }
