@@ -639,9 +639,13 @@ CREATE OR REPLACE PACKAGE BODY tts_pkg_tasks AS
         p_due_date        IN DATE,
         p_estimated_hours IN NUMBER
     ) RETURN NUMBER IS
-        v_task_id     NUMBER;
-        v_task_number VARCHAR2(20);
-        v_creator_name VARCHAR2(150);
+        v_task_id        NUMBER;
+        v_task_number    VARCHAR2(20);
+        v_creator_name   VARCHAR2(150);
+        v_assignee_email VARCHAR2(100);
+        v_assignee_name  VARCHAR2(150);
+        v_system_name    VARCHAR2(100);
+        v_email_body     CLOB;
     BEGIN
         -- Validate dates
         IF p_due_date < p_start_date THEN
@@ -676,15 +680,16 @@ CREATE OR REPLACE PACKAGE BODY tts_pkg_tasks AS
             p_new_value   => 'Task ' || v_task_number || ' created'
         );
         
+        -- Fetch creator name
+        BEGIN
+            SELECT full_name INTO v_creator_name
+            FROM tts_users WHERE user_id = p_created_by;
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN v_creator_name := 'Unknown';
+        END;
+        
         -- Notify the assigned user (if different from creator)
         IF p_assigned_to != p_created_by THEN
-            BEGIN
-                SELECT full_name INTO v_creator_name
-                FROM tts_users WHERE user_id = p_created_by;
-            EXCEPTION
-                WHEN NO_DATA_FOUND THEN v_creator_name := 'Unknown';
-            END;
-            
             tts_pkg_notifications.create_notification(
                 p_user_id => p_assigned_to,
                 p_task_id => v_task_id,
@@ -692,6 +697,61 @@ CREATE OR REPLACE PACKAGE BODY tts_pkg_tasks AS
                 p_message => 'New task assigned to you: ' || p_title || ' by ' || v_creator_name
             );
         END IF;
+        
+        -- --------------------------------------------------------
+        -- Send Email Notification to the Assigned Employee
+        -- Uses APEX_MAIL (configured via SMTP in APEX Admin)
+        -- --------------------------------------------------------
+        BEGIN
+            -- Get assignee email and name
+            SELECT email, full_name
+            INTO   v_assignee_email, v_assignee_name
+            FROM   tts_users
+            WHERE  user_id = p_assigned_to;
+            
+            -- Get system name
+            BEGIN
+                SELECT system_name INTO v_system_name
+                FROM   tts_systems WHERE system_id = p_system_id;
+            EXCEPTION
+                WHEN NO_DATA_FOUND THEN v_system_name := 'N/A';
+            END;
+            
+            -- Build plain-text email body
+            v_email_body :=
+                'Dear ' || v_assignee_name || ',' || CHR(10) || CHR(10) ||
+                'A new task has been assigned to you. Please review the details below:' || CHR(10) || CHR(10) ||
+                '--------------------------------------------' || CHR(10) ||
+                'Task Number : ' || v_task_number                            || CHR(10) ||
+                'Task Title  : ' || p_title                                  || CHR(10) ||
+                'System      : ' || v_system_name                            || CHR(10) ||
+                'Priority    : ' || p_priority                               || CHR(10) ||
+                'Start Date  : ' || TO_CHAR(p_start_date, 'DD-Mon-YYYY')    || CHR(10) ||
+                'Due Date    : ' || TO_CHAR(p_due_date,   'DD-Mon-YYYY')    || CHR(10) ||
+                'Created By  : ' || v_creator_name                          || CHR(10) ||
+                '--------------------------------------------' || CHR(10) || CHR(10) ||
+                'Please log in to the Daily Tasks Tracking System to view full details.' || CHR(10) || CHR(10) ||
+                'This is an automated message. Please do not reply.' || CHR(10) ||
+                'Daily Tasks Tracking System';
+            
+            -- Send the email using APEX_MAIL
+            APEX_MAIL.SEND(
+                p_to      => v_assignee_email,
+                p_from    => 'tasks@yourcompany.com',   -- ← غير هذا بعنوان بريد شركتك
+                p_subj    => '[TTS] New Task Assigned: ' || p_title || ' (' || v_task_number || ')',
+                p_body    => v_email_body
+            );
+            
+            -- Push email to the mail queue immediately
+            APEX_MAIL.PUSH_QUEUE;
+            
+        EXCEPTION
+            WHEN OTHERS THEN
+                -- Email failure should NOT block task creation
+                -- Log the error silently and continue
+                NULL;
+        END;
+        -- --------------------------------------------------------
         
         RETURN v_task_id;
         
