@@ -737,7 +737,7 @@ CREATE OR REPLACE PACKAGE BODY tts_pkg_tasks AS
             -- Send the email using APEX_MAIL
             APEX_MAIL.SEND(
                 p_to      => v_assignee_email,
-                p_from    => 'tasks@yourcompany.com',   -- ← غير هذا بعنوان بريد شركتك
+                p_from    => 'karim.fathy@abuqir.com',  -- OCI Email Delivery Approved Sender
                 p_subj    => '[TTS] New Task Assigned: ' || p_title || ' (' || v_task_number || ')',
                 p_body    => v_email_body
             );
